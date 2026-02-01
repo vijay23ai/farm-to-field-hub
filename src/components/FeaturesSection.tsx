@@ -1,0 +1,78 @@
+import { Leaf, Bug, TrendingUp, Users, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const features = [
+  {
+    icon: Leaf,
+    title: "Smart Crop Selection",
+    description: "AI-powered recommendations based on your soil, climate, and market demand",
+    href: "/crop-advisor",
+    color: "bg-primary/10 text-primary",
+  },
+  {
+    icon: Bug,
+    title: "Disease Detection",
+    description: "Upload leaf images for instant AI diagnosis and treatment advice",
+    href: "/disease-detection",
+    color: "bg-secondary/20 text-secondary-foreground",
+  },
+  {
+    icon: TrendingUp,
+    title: "Market Prices",
+    description: "Live mandi rates and price predictions to maximize your profits",
+    href: "/market-insights",
+    color: "bg-accent text-accent-foreground",
+  },
+  {
+    icon: Users,
+    title: "Farmer Community",
+    description: "Connect with experts and access government schemes",
+    href: "/community",
+    color: "bg-primary/10 text-primary",
+  },
+];
+
+const FeaturesSection = () => {
+  return (
+    <section className="py-20 md:py-28 bg-background">
+      <div className="container mx-auto px-4">
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 font-display">
+            Everything You Need for Smart Farming
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Harness the power of AI to make better decisions for your farm
+          </p>
+        </div>
+        
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((feature) => (
+            <Link
+              key={feature.title}
+              to={feature.href}
+              className="group p-6 rounded-2xl bg-card border border-border/50 shadow-sm feature-card-hover"
+            >
+              <div className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center mb-4`}>
+                <feature.icon className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                {feature.description}
+              </p>
+              <div className="flex items-center gap-1 text-primary font-medium text-sm group-hover:gap-2 transition-all">
+                Explore
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default FeaturesSection;
