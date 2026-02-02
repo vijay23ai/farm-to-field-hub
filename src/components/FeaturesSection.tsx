@@ -1,7 +1,14 @@
-import { Leaf, Bug, TrendingUp, Users, ArrowRight } from "lucide-react";
+import { Leaf, Bug, TrendingUp, Users, ArrowRight, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const features = [
+  {
+    icon: MessageCircle,
+    title: "Ask AI",
+    description: "Ask any farming question and get instant LLaMA-powered answers",
+    href: "/ask-ai",
+    color: "bg-primary text-primary-foreground",
+  },
   {
     icon: Leaf,
     title: "Smart Crop Selection",
@@ -47,7 +54,7 @@ const FeaturesSection = () => {
         </div>
         
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {features.map((feature) => (
             <Link
               key={feature.title}

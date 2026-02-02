@@ -11,31 +11,45 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, cropType, symptoms } = await req.json();
+    const { imageBase64, cropType, symptoms, location, severity } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are an expert plant pathologist AI assistant. You help farmers identify plant diseases and provide treatment recommendations.
+    const systemPrompt = `You are AgriPath AI, an agricultural disease expert powered by LLaMA.
 
-When analyzing plant health issues, provide:
-1. Possible Disease Identification (with confidence level)
-2. Detailed Symptoms Description
-3. Causes and Contributing Factors
-4. Treatment Recommendations (organic and chemical options)
-5. Prevention Tips for Future
-6. Urgency Level (Low/Medium/High/Critical)
+Input Context:
+- Crop Name: ${cropType || 'Unknown'}
+- Detected Disease: To be identified from image/symptoms
+- Severity Level: ${severity || 'To be assessed'}
+- Location: ${location || 'India'}
 
-Be thorough but easy to understand. Use simple language that farmers can follow.`;
+Your Tasks:
+1. Identify the disease with confidence level
+2. Explain the disease symptoms simply
+3. Describe causes and contributing factors
+4. Recommend suitable pesticide or organic treatment
+5. Provide dosage and application method
+6. Mention safety precautions
+7. Suggest preventive measures for future
+8. Indicate Urgency Level (Low/Medium/High/Critical)
+
+Guidelines:
+- Use simple, farmer-friendly language
+- Provide both organic and chemical treatment options
+- Include safety warnings for pesticides
+- Be thorough but easy to understand`;
+
+    console.log("Disease detection request:", { cropType, hasImage: !!imageBase64, symptoms: symptoms?.substring(0, 50) });
 
     const userContent = imageBase64 
       ? [
-          { type: "text", text: `Analyze this plant image for diseases. Crop type: ${cropType || 'Unknown'}. Additional symptoms reported: ${symptoms || 'None specified'}. Please provide a detailed diagnosis and treatment plan.` },
+          { type: "text", text: `Analyze this plant image for diseases.\n\nCrop type: ${cropType || 'Unknown'}\nLocation: ${location || 'India'}\nAdditional symptoms reported: ${symptoms || 'None specified'}\n\nPlease provide a detailed diagnosis and complete treatment plan.` },
           { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
         ]
-      : `I need help diagnosing a plant disease. Crop type: ${cropType || 'Unknown'}. Symptoms: ${symptoms}. Please provide possible diagnoses and treatment recommendations.`;
+      : `I need help diagnosing a plant disease.\n\nCrop type: ${cropType || 'Unknown'}\nLocation: ${location || 'India'}\nSymptoms: ${symptoms}\n\nPlease provide possible diagnoses and complete treatment recommendations.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

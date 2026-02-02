@@ -8,6 +8,7 @@ import CropAdvisor from "./pages/CropAdvisor";
 import DiseaseDetection from "./pages/DiseaseDetection";
 import MarketInsights from "./pages/MarketInsights";
 import Community from "./pages/Community";
+import AskAI from "./pages/AskAI";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -21,6 +22,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/ask-ai" element={<AskAI />} />
           <Route path="/crop-advisor" element={<CropAdvisor />} />
           <Route path="/disease-detection" element={<DiseaseDetection />} />
           <Route path="/market-insights" element={<MarketInsights />} />

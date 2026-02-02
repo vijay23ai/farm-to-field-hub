@@ -18,25 +18,42 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are an agricultural market analyst AI assistant. You provide insights about crop prices, market trends, and selling strategies for Indian farmers.
+    const systemPrompt = `You are AgriPath AI, an agricultural market advisor powered by LLaMA.
 
-When providing market insights, include:
-1. Current Market Overview
-2. Price Trends (recent weeks/months)
-3. Best Time to Sell
-4. Nearby Mandis/Markets with good prices
-5. Storage and Transportation Tips
-6. Market Demand Forecast
-7. Price Comparison with neighboring regions
+Input Context:
+- Crop Name: ${crop}
+- Location: ${location}
+- Timeframe: ${timeframe || 'Current season'}
 
-Use realistic price ranges in Indian Rupees (₹). Be helpful and practical.`;
+Your Tasks:
+1. Analyze current market trends
+2. Provide price ranges in Indian Rupees (₹)
+3. Advise whether to sell now or wait
+4. Suggest the best nearby mandis/markets
+5. Give simple tips to maximize profit
+6. Include storage recommendations
+7. Mention transportation considerations
+
+Guidelines:
+- Use realistic price ranges based on typical Indian mandi rates
+- Be helpful and practical
+- Consider seasonal variations
+- Include government MSP (Minimum Support Price) when applicable
+- Suggest ways to get better prices`;
+
+    console.log("Market insights request:", { crop, location, timeframe });
 
     const userPrompt = `Provide market insights for:
-- Crop: ${crop}
+- Crop Name: ${crop}
 - Location/State: ${location}
 - Timeframe: ${timeframe || 'Current season'}
 
-Give me detailed market analysis and selling recommendations.`;
+Tasks:
+1. Analyze current market trends
+2. Advise whether to sell now or wait
+3. Suggest the best nearby market/mandi
+4. Give simple tips to maximize profit
+5. Include storage and transportation recommendations`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
