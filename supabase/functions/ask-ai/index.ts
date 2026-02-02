@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { soilType, climate, location, waterAvailability, farmSize, weather, coordinates } = await req.json();
+    const { question, location, crop, season, weather } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -20,64 +20,42 @@ serve(async (req) => {
 
     const systemPrompt = `You are AgriPath AI, a LLaMA-powered smart farming assistant.
 
-Your tasks:
-1. Analyze the farm and weather conditions.
-2. Recommend the top 2–3 most suitable crops.
-3. Explain clearly why each crop is suitable.
-4. Select the best crop and recommend it.
+Your task:
+- Answer the farmer's question clearly and accurately.
+- Use simple, easy-to-understand language.
+- Provide practical, step-by-step guidance.
+- Avoid technical jargon.
+- Focus on sustainable and cost-effective farming practices.
+- Consider local conditions and practices in India.
 
-For the selected crop, provide complete guidance covering:
-- Seed variety and quality
-- Land preparation
-- Sowing method and timing
-- Irrigation schedule
-- Fertilizer plan
-- Pest and disease prevention
-- Harvesting time
-- Storage practices
-- Market selling strategy
+If the question is unclear:
+- Ask a short clarifying question before answering.
+
+Always keep the response farmer-friendly and actionable.
 
 Guidelines:
-- Use simple, farmer-friendly language.
-- Avoid technical jargon.
-- Focus on cost-effective and sustainable practices.
-- Consider local farming practices in India.
-- Be encouraging and supportive of farmers.`;
+- Be encouraging and supportive
+- Provide specific recommendations when possible
+- Include safety precautions where relevant
+- Mention government schemes if applicable
+- Keep responses concise but complete`;
 
-    let weatherContext = "";
+    let contextInfo = "";
+    if (location) contextInfo += `\n- Location: ${location}`;
+    if (crop) contextInfo += `\n- Current Crop: ${crop}`;
+    if (season) contextInfo += `\n- Season: ${season}`;
     if (weather) {
-      weatherContext = `
-Weather Data:
-- Temperature: ${weather.temperature} °C
-- Humidity: ${weather.humidity} %
-- Rainfall: ${weather.rainfall}
-- Weather Forecast: ${weather.forecast}`;
+      contextInfo += `\n- Current Weather: ${weather.temperature}°C, ${weather.humidity}% humidity, ${weather.rainfall} rainfall, ${weather.forecast}`;
     }
 
-    let coordContext = "";
-    if (coordinates) {
-      coordContext = `
-- Latitude: ${coordinates.latitude}
-- Longitude: ${coordinates.longitude}`;
-    }
+    const userPrompt = `User Question:
+${question}
 
-    const userPrompt = `Farmer Context:
-- Location: ${location}${coordContext}
-- Soil Type: ${soilType}
-- Land Size: ${farmSize}
-- Season: Current season
-- Water Source: ${waterAvailability}
-${weatherContext}
+Context (if available):${contextInfo || "\n- No additional context provided"}
 
-Your tasks:
-1. Analyze the farm and weather conditions.
-2. Recommend the top 2–3 most suitable crops.
-3. Explain clearly why each crop is suitable.
-4. Select the best crop and recommend it.
+Please provide a helpful, farmer-friendly response.`;
 
-For the selected crop, provide complete guidance.`;
-
-    console.log("Crop advisor request:", { soilType, climate, location, farmSize, hasWeather: !!weather });
+    console.log("Ask AI request:", { question, location, crop, season, hasWeather: !!weather });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -120,7 +98,7 @@ For the selected crop, provide complete guidance.`;
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
-    console.error("Crop advisor error:", error);
+    console.error("Ask AI error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,

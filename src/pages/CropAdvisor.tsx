@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Leaf, ArrowLeft, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Leaf, ArrowLeft, Loader2, MapPin, Cloud } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { useWeather } from "@/hooks/useWeather";
 import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -42,6 +44,8 @@ const waterOptions = [
 
 const CropAdvisor = () => {
   const { toast } = useToast();
+  const { location, getLocation } = useGeolocation();
+  const { weather, fetchWeather } = useWeather();
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [formData, setFormData] = useState({
@@ -51,6 +55,23 @@ const CropAdvisor = () => {
     waterAvailability: "",
     farmSize: "",
   });
+
+  // Auto-fill location when detected
+  useEffect(() => {
+    if (location.city && location.state && !formData.location) {
+      setFormData(prev => ({
+        ...prev,
+        location: `${location.city}, ${location.state}`,
+      }));
+    }
+  }, [location.city, location.state, formData.location]);
+
+  // Fetch weather when location is available
+  useEffect(() => {
+    if (location.latitude && location.longitude && !weather.loading && !weather.temperature) {
+      fetchWeather(location.latitude, location.longitude);
+    }
+  }, [location.latitude, location.longitude, fetchWeather, weather.loading, weather.temperature]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +95,19 @@ const CropAdvisor = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          weather: weather.temperature ? {
+            temperature: weather.temperature,
+            humidity: weather.humidity,
+            rainfall: weather.rainfall,
+            forecast: weather.forecast,
+          } : null,
+          coordinates: location.latitude ? {
+            latitude: location.latitude,
+            longitude: location.longitude,
+          } : null,
+        }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -154,7 +187,7 @@ const CropAdvisor = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground font-display">Smart Crop Selection</h1>
-                <p className="text-muted-foreground">AI-powered recommendations based on your farm conditions</p>
+                <p className="text-muted-foreground">LLaMA-powered recommendations based on your farm conditions</p>
               </div>
             </div>
 
@@ -162,6 +195,37 @@ const CropAdvisor = () => {
               {/* Form */}
               <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Farm Details</h2>
+                
+                {/* Location & Weather Status */}
+                <div className="mb-4 p-3 bg-accent/30 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">
+                        {location.city ? `${location.city}, ${location.state}` : "Location not detected"}
+                      </span>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={getLocation}
+                      disabled={location.loading}
+                    >
+                      {location.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Detect"}
+                    </Button>
+                  </div>
+                  {weather.temperature > 0 && (
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Cloud className="w-3 h-3" />
+                        {weather.temperature}°C
+                      </span>
+                      <span>Humidity: {weather.humidity}%</span>
+                      <span>Rainfall: {weather.rainfall}</span>
+                    </div>
+                  )}
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="soilType">Soil Type *</Label>
@@ -248,7 +312,7 @@ const CropAdvisor = () => {
                 ) : (
                   <div className="text-center text-muted-foreground py-12">
                     <Leaf className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                    <p>Fill in your farm details and click "Get Recommendations" to receive AI-powered crop suggestions.</p>
+                    <p>Fill in your farm details and click "Get Recommendations" to receive LLaMA-powered crop suggestions.</p>
                   </div>
                 )}
               </div>
