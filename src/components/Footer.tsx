@@ -1,22 +1,25 @@
 import { Sprout, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   return (
     <footer className="py-12 bg-card border-t border-border/50">
       <div className="container mx-auto px-4">
         {/* Development Notice */}
         <div className="mb-8 p-4 rounded-xl bg-accent/30 border border-border">
           <p className="text-sm text-muted-foreground text-center">
-            <strong>Note:</strong> Some features such as WhatsApp integration and certain buttons are currently under development and may not work at this stage. These will be enabled in future updates.
+            {t("footer.devNote")}
           </p>
         </div>
 
         {/* Website Insights */}
         <div className="mb-8 p-6 rounded-xl bg-primary/5 border border-border">
-          <h3 className="font-semibold text-foreground mb-2">Website Insights</h3>
+          <h3 className="font-semibold text-foreground mb-2">{t("footer.insights")}</h3>
           <p className="text-sm text-muted-foreground">
-            AgriPath AI is a prototype LLaMA-based smart farming platform designed to demonstrate AI-driven decision support for agriculture. The system integrates real-time APIs, disease detection models, and Large Language Models to provide farmer-friendly guidance. Some features are in development and will be enhanced in future versions.
+            {t("footer.insightsText")}
           </p>
         </div>
 
@@ -35,23 +38,23 @@ const Footer = () => {
           
           {/* Links */}
           <nav className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-            <Link to="/ask-ai" className="hover:text-foreground transition-colors">Ask AI</Link>
-            <Link to="/crop-advisor" className="hover:text-foreground transition-colors">Crop Advisor</Link>
-            <Link to="/disease-detection" className="hover:text-foreground transition-colors">Disease Detection</Link>
-            <Link to="/market-insights" className="hover:text-foreground transition-colors">Market Insights</Link>
+            <Link to="/ask-ai" className="hover:text-foreground transition-colors">{t("nav.askAi")}</Link>
+            <Link to="/crop-advisor" className="hover:text-foreground transition-colors">{t("nav.cropAdvisor")}</Link>
+            <Link to="/disease-detection" className="hover:text-foreground transition-colors">{t("nav.diseaseDetection")}</Link>
+            <Link to="/market-insights" className="hover:text-foreground transition-colors">{t("nav.marketInsights")}</Link>
           </nav>
           
           {/* Developer Credits */}
           <div className="text-center md:text-right">
             <p className="text-sm font-medium text-foreground">
-              Developed by: K. Vijay
+              {t("footer.developedBy")}
             </p>
             <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-end gap-1">
               <Phone className="w-3 h-3" />
               9154521135
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Project: AgriPath AI – Smart Farming Using LLaMA
+              {t("footer.project")}
             </p>
           </div>
         </div>
@@ -59,7 +62,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="mt-6 pt-6 border-t border-border/50 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2025 AgriPath AI. All rights reserved.
+            {t("footer.copyright")}
           </p>
         </div>
       </div>

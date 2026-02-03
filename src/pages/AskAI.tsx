@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
+import { useLanguage } from "@/contexts/LanguageContext";
 import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -18,6 +19,7 @@ const AskAI = () => {
   const { toast } = useToast();
   const { location, getLocation } = useGeolocation();
   const { weather, fetchWeather } = useWeather();
+  const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [question, setQuestion] = useState("");
@@ -38,7 +40,7 @@ const AskAI = () => {
     
     if (!question.trim()) {
       toast({
-        title: "Missing Question",
+        title: t("common.error"),
         description: "Please enter your farming question.",
         variant: "destructive",
       });
@@ -57,6 +59,7 @@ const AskAI = () => {
         },
         body: JSON.stringify({
           question,
+          language,
           location: location.city && location.state ? `${location.city}, ${location.state}` : "",
           crop: formData.crop,
           season: formData.season,
@@ -119,7 +122,7 @@ const AskAI = () => {
     } catch (error) {
       console.error("Error:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: "Failed to get AI response. Please try again.",
         variant: "destructive",
       });
@@ -136,7 +139,7 @@ const AskAI = () => {
         <div className="container mx-auto px-4">
           <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            {t("nav.home")}
           </Link>
           
           <div className="max-w-4xl mx-auto">
@@ -145,8 +148,8 @@ const AskAI = () => {
                 <MessageCircle className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground font-display">Ask AI</h1>
-                <p className="text-muted-foreground">Get instant answers to your farming questions powered by LLaMA</p>
+                <h1 className="text-3xl font-bold text-foreground font-display">{t("askAi.title")}</h1>
+                <p className="text-muted-foreground">{t("askAi.subtitle")}</p>
               </div>
             </div>
 
@@ -156,7 +159,7 @@ const AskAI = () => {
                 {/* Location Card */}
                 <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-sm">Location</h3>
+                    <h3 className="font-semibold text-sm">{t("common.location")}</h3>
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                   </div>
                   {location.city ? (
@@ -177,7 +180,7 @@ const AskAI = () => {
                       ) : (
                         <MapPin className="w-4 h-4 mr-2" />
                       )}
-                      Detect Location
+                      {t("common.detectLocation")}
                     </Button>
                   )}
                   {location.error && (
@@ -189,24 +192,24 @@ const AskAI = () => {
                 {weather.temperature > 0 && (
                   <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-sm">Weather</h3>
+                      <h3 className="font-semibold text-sm">{t("cropAdvisor.weatherInfo")}</h3>
                       <Cloud className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <p className="text-muted-foreground">Temp</p>
+                        <p className="text-muted-foreground">{t("cropAdvisor.temperature")}</p>
                         <p className="font-medium">{weather.temperature}°C</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Humidity</p>
+                        <p className="text-muted-foreground">{t("cropAdvisor.humidity")}</p>
                         <p className="font-medium">{weather.humidity}%</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Rainfall</p>
+                        <p className="text-muted-foreground">{t("cropAdvisor.rainfall")}</p>
                         <p className="font-medium">{weather.rainfall}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Forecast</p>
+                        <p className="text-muted-foreground">{t("cropAdvisor.forecast")}</p>
                         <p className="font-medium text-xs">{weather.forecast}</p>
                       </div>
                     </div>
@@ -215,22 +218,22 @@ const AskAI = () => {
 
                 {/* Context Inputs */}
                 <div className="bg-card rounded-xl border border-border p-4 shadow-sm space-y-3">
-                  <h3 className="font-semibold text-sm">Context (Optional)</h3>
+                  <h3 className="font-semibold text-sm">{t("askAi.contextTitle")}</h3>
                   <div>
-                    <Label htmlFor="crop" className="text-xs">Current Crop</Label>
+                    <Label htmlFor="crop" className="text-xs">{t("askAi.cropPlaceholder")}</Label>
                     <Input
                       id="crop"
-                      placeholder="e.g., Wheat, Rice"
+                      placeholder={t("askAi.cropPlaceholder")}
                       value={formData.crop}
                       onChange={(e) => setFormData({ ...formData, crop: e.target.value })}
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="season" className="text-xs">Season</Label>
+                    <Label htmlFor="season" className="text-xs">{t("askAi.seasonPlaceholder")}</Label>
                     <Input
                       id="season"
-                      placeholder="e.g., Kharif, Rabi"
+                      placeholder={t("askAi.seasonPlaceholder")}
                       value={formData.season}
                       onChange={(e) => setFormData({ ...formData, season: e.target.value })}
                       className="mt-1"
@@ -244,10 +247,10 @@ const AskAI = () => {
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="question">Your Farming Question</Label>
+                      <Label htmlFor="question">{t("common.askQuestion")}</Label>
                       <Textarea
                         id="question"
-                        placeholder="Ask anything about farming, crops, pests, weather, soil, irrigation, government schemes..."
+                        placeholder={t("askAi.placeholder")}
                         value={question}
                         onChange={(e) => setQuestion(e.target.value)}
                         rows={4}
@@ -259,12 +262,12 @@ const AskAI = () => {
                       {isLoading ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Thinking...
+                          {t("common.analyzing")}
                         </>
                       ) : (
                         <>
                           <Send className="w-4 h-4 mr-2" />
-                          Ask AI
+                          {t("nav.askAi")}
                         </>
                       )}
                     </Button>
@@ -280,8 +283,7 @@ const AskAI = () => {
                     ) : (
                       <div className="text-center text-muted-foreground py-8 bg-accent/20 rounded-xl">
                         <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm">Your AI response will appear here.</p>
-                        <p className="text-xs mt-1">Enable location for personalized answers!</p>
+                        <p className="text-sm">{t("askAi.subtitle")}</p>
                       </div>
                     )}
                   </div>

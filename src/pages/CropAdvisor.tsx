@@ -8,44 +8,18 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
+import { useLanguage } from "@/contexts/LanguageContext";
 import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/crop-advisor`;
 
-const soilTypes = [
-  "Alluvial Soil",
-  "Black Soil (Regur)",
-  "Red Soil",
-  "Laterite Soil",
-  "Desert Soil",
-  "Mountain Soil",
-  "Clay Soil",
-  "Sandy Soil",
-  "Loamy Soil",
-];
-
-const climateTypes = [
-  "Tropical",
-  "Subtropical",
-  "Temperate",
-  "Arid/Semi-Arid",
-  "Humid",
-  "Monsoon",
-];
-
-const waterOptions = [
-  "Abundant (Canal/River)",
-  "Moderate (Well/Borewell)",
-  "Limited (Rainfed)",
-  "Drip Irrigation Available",
-];
-
 const CropAdvisor = () => {
   const { toast } = useToast();
   const { location, getLocation } = useGeolocation();
   const { weather, fetchWeather } = useWeather();
+  const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [formData, setFormData] = useState({
@@ -55,6 +29,32 @@ const CropAdvisor = () => {
     waterAvailability: "",
     farmSize: "",
   });
+
+  const soilTypes = [
+    { value: "Alluvial Soil", label: t("cropAdvisor.soilTypes.alluvial") },
+    { value: "Black Soil (Regur)", label: t("cropAdvisor.soilTypes.black") },
+    { value: "Red Soil", label: t("cropAdvisor.soilTypes.red") },
+    { value: "Laterite Soil", label: t("cropAdvisor.soilTypes.laterite") },
+    { value: "Sandy Soil", label: t("cropAdvisor.soilTypes.sandy") },
+    { value: "Clay Soil", label: t("cropAdvisor.soilTypes.clay") },
+  ];
+
+  const climateTypes = [
+    { value: "Tropical", label: "Tropical" },
+    { value: "Subtropical", label: "Subtropical" },
+    { value: "Temperate", label: "Temperate" },
+    { value: "Arid/Semi-Arid", label: "Arid/Semi-Arid" },
+    { value: "Humid", label: "Humid" },
+    { value: "Monsoon", label: "Monsoon" },
+  ];
+
+  const waterOptions = [
+    { value: "Canal Irrigation", label: t("cropAdvisor.waterOptions.canal") },
+    { value: "Borewell", label: t("cropAdvisor.waterOptions.borewell") },
+    { value: "Rainfed", label: t("cropAdvisor.waterOptions.rainfed") },
+    { value: "Drip Irrigation", label: t("cropAdvisor.waterOptions.drip") },
+    { value: "River/Pond", label: t("cropAdvisor.waterOptions.river") },
+  ];
 
   // Auto-fill location when detected
   useEffect(() => {
@@ -78,7 +78,7 @@ const CropAdvisor = () => {
     
     if (!formData.soilType || !formData.climate || !formData.location) {
       toast({
-        title: "Missing Information",
+        title: t("common.error"),
         description: "Please fill in soil type, climate, and location.",
         variant: "destructive",
       });
@@ -97,6 +97,7 @@ const CropAdvisor = () => {
         },
         body: JSON.stringify({
           ...formData,
+          language,
           weather: weather.temperature ? {
             temperature: weather.temperature,
             humidity: weather.humidity,
@@ -160,7 +161,7 @@ const CropAdvisor = () => {
     } catch (error) {
       console.error("Error:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: "Failed to get crop recommendations. Please try again.",
         variant: "destructive",
       });
@@ -177,7 +178,7 @@ const CropAdvisor = () => {
         <div className="container mx-auto px-4">
           <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            {t("nav.home")}
           </Link>
           
           <div className="max-w-4xl mx-auto">
@@ -186,15 +187,15 @@ const CropAdvisor = () => {
                 <Leaf className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground font-display">Smart Crop Selection</h1>
-                <p className="text-muted-foreground">LLaMA-powered recommendations based on your farm conditions</p>
+                <h1 className="text-3xl font-bold text-foreground font-display">{t("cropAdvisor.title")}</h1>
+                <p className="text-muted-foreground">{t("cropAdvisor.subtitle")}</p>
               </div>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Form */}
               <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Farm Details</h2>
+                <h2 className="text-xl font-semibold mb-4">{t("cropAdvisor.formTitle")}</h2>
                 
                 {/* Location & Weather Status */}
                 <div className="mb-4 p-3 bg-accent/30 rounded-xl">
@@ -202,7 +203,7 @@ const CropAdvisor = () => {
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-primary" />
                       <span className="text-sm font-medium">
-                        {location.city ? `${location.city}, ${location.state}` : "Location not detected"}
+                        {location.city ? `${location.city}, ${location.state}` : t("cropAdvisor.locationPlaceholder")}
                       </span>
                     </div>
                     <Button 
@@ -211,7 +212,7 @@ const CropAdvisor = () => {
                       onClick={getLocation}
                       disabled={location.loading}
                     >
-                      {location.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Detect"}
+                      {location.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : t("common.detectLocation")}
                     </Button>
                   </div>
                   {weather.temperature > 0 && (
@@ -220,22 +221,22 @@ const CropAdvisor = () => {
                         <Cloud className="w-3 h-3" />
                         {weather.temperature}°C
                       </span>
-                      <span>Humidity: {weather.humidity}%</span>
-                      <span>Rainfall: {weather.rainfall}</span>
+                      <span>{t("cropAdvisor.humidity")}: {weather.humidity}%</span>
+                      <span>{t("cropAdvisor.rainfall")}: {weather.rainfall}</span>
                     </div>
                   )}
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="soilType">Soil Type *</Label>
+                    <Label htmlFor="soilType">{t("common.soilType")} *</Label>
                     <Select value={formData.soilType} onValueChange={(v) => setFormData({ ...formData, soilType: v })}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select soil type" />
+                        <SelectValue placeholder={t("common.selectSoilType")} />
                       </SelectTrigger>
                       <SelectContent>
                         {soilTypes.map((soil) => (
-                          <SelectItem key={soil} value={soil}>{soil}</SelectItem>
+                          <SelectItem key={soil.value} value={soil.value}>{soil.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -249,41 +250,41 @@ const CropAdvisor = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {climateTypes.map((climate) => (
-                          <SelectItem key={climate} value={climate}>{climate}</SelectItem>
+                          <SelectItem key={climate.value} value={climate.value}>{climate.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="location">Location/State *</Label>
+                    <Label htmlFor="location">{t("common.location")} *</Label>
                     <Input
                       id="location"
-                      placeholder="e.g., Maharashtra, Punjab"
+                      placeholder={t("cropAdvisor.locationPlaceholder")}
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="waterAvailability">Water Availability</Label>
+                    <Label htmlFor="waterAvailability">{t("common.waterAvailability")}</Label>
                     <Select value={formData.waterAvailability} onValueChange={(v) => setFormData({ ...formData, waterAvailability: v })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select water source" />
                       </SelectTrigger>
                       <SelectContent>
                         {waterOptions.map((option) => (
-                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="farmSize">Farm Size</Label>
+                    <Label htmlFor="farmSize">{t("common.farmSize")}</Label>
                     <Input
                       id="farmSize"
-                      placeholder="e.g., 5 acres, 2 hectares"
+                      placeholder={t("cropAdvisor.farmSizePlaceholder")}
                       value={formData.farmSize}
                       onChange={(e) => setFormData({ ...formData, farmSize: e.target.value })}
                     />
@@ -293,10 +294,10 @@ const CropAdvisor = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Analyzing...
+                        {t("common.analyzing")}
                       </>
                     ) : (
-                      "Get Recommendations"
+                      t("common.getRecommendations")
                     )}
                   </Button>
                 </form>
@@ -304,7 +305,7 @@ const CropAdvisor = () => {
 
               {/* Results */}
               <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">AI Recommendations</h2>
+                <h2 className="text-xl font-semibold mb-4">AI {t("common.getRecommendations")}</h2>
                 {response ? (
                   <div className="prose prose-sm max-w-none text-foreground">
                     <ReactMarkdown>{response}</ReactMarkdown>
@@ -312,7 +313,7 @@ const CropAdvisor = () => {
                 ) : (
                   <div className="text-center text-muted-foreground py-12">
                     <Leaf className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                    <p>Fill in your farm details and click "Get Recommendations" to receive LLaMA-powered crop suggestions.</p>
+                    <p>{t("cropAdvisor.subtitle")}</p>
                   </div>
                 )}
               </div>

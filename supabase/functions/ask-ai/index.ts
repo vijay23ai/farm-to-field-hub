@@ -5,20 +5,36 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const languageNames: Record<string, string> = {
+  en: "English",
+  te: "Telugu",
+  hi: "Hindi",
+  ta: "Tamil",
+  kn: "Kannada",
+  mr: "Marathi",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { question, location, crop, season, weather } = await req.json();
+    const { question, location, crop, season, weather, language = "en" } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const languageName = languageNames[language] || "English";
+
     const systemPrompt = `You are AgriPath AI, a LLaMA-powered smart farming assistant.
+
+CRITICAL RULE:
+The entire response must be in ${languageName} language ONLY.
+Do NOT mix languages under any condition.
+Use simple, farmer-friendly words suitable for rural users.
 
 Your task:
 - Answer the farmer's question clearly and accurately.
@@ -38,7 +54,8 @@ Guidelines:
 - Provide specific recommendations when possible
 - Include safety precautions where relevant
 - Mention government schemes if applicable
-- Keep responses concise but complete`;
+- Keep responses concise but complete
+- RESPOND ONLY IN ${languageName.toUpperCase()} LANGUAGE.`;
 
     let contextInfo = "";
     if (location) contextInfo += `\n- Location: ${location}`;
@@ -53,9 +70,9 @@ ${question}
 
 Context (if available):${contextInfo || "\n- No additional context provided"}
 
-Please provide a helpful, farmer-friendly response.`;
+Please provide a helpful, farmer-friendly response in ${languageName} language ONLY.`;
 
-    console.log("Ask AI request:", { question, location, crop, season, hasWeather: !!weather });
+    console.log("Ask AI request:", { question, location, crop, season, hasWeather: !!weather, language });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
