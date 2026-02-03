@@ -1,21 +1,24 @@
-import { Sprout, Globe, ChevronDown, Menu, X } from "lucide-react";
+import { Sprout, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-
-const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Crop Advisor", href: "/crop-advisor" },
-  { name: "Disease Detection", href: "/disease-detection" },
-  { name: "Market Insights", href: "/market-insights" },
-  { name: "Community", href: "/community" },
-];
+import LanguageSelector from "@/components/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Header = () => {
   const [user, setUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useLanguage();
+
+  const navLinks = [
+    { name: t("nav.home"), href: "/" },
+    { name: t("nav.cropAdvisor"), href: "/crop-advisor" },
+    { name: t("nav.diseaseDetection"), href: "/disease-detection" },
+    { name: t("nav.marketInsights"), href: "/market-insights" },
+    { name: t("nav.community"), href: "/community" },
+  ];
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -56,7 +59,7 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
-                key={link.name}
+                key={link.href}
                 to={link.href}
                 className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
@@ -67,11 +70,7 @@ const Header = () => {
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
-            <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Globe className="w-4 h-4" />
-              <span>English</span>
-              <ChevronDown className="w-3 h-3" />
-            </button>
+            <LanguageSelector />
             
             {user ? (
               <>
@@ -79,17 +78,17 @@ const Header = () => {
                   {user.email}
                 </span>
                 <Button size="sm" variant="outline" onClick={handleLogout}>
-                  Logout
+                  {t("nav.logout")}
                 </Button>
               </>
             ) : (
               <>
                 <Link to="/auth" className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  Login
+                  {t("nav.login")}
                 </Link>
                 <Link to="/auth">
                   <Button size="sm" className="rounded-full">
-                    Sign Up
+                    {t("nav.signup")}
                   </Button>
                 </Link>
               </>
@@ -111,7 +110,7 @@ const Header = () => {
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link
-                  key={link.name}
+                  key={link.href}
                   to={link.href}
                   className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setMobileMenuOpen(false)}

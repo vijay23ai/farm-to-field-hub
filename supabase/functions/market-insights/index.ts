@@ -5,20 +5,36 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const languageNames: Record<string, string> = {
+  en: "English",
+  te: "Telugu",
+  hi: "Hindi",
+  ta: "Tamil",
+  kn: "Kannada",
+  mr: "Marathi",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { crop, location, timeframe } = await req.json();
+    const { crop, location, timeframe, language = "en" } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const languageName = languageNames[language] || "English";
+
     const systemPrompt = `You are AgriPath AI, an agricultural market advisor powered by LLaMA.
+
+CRITICAL INSTRUCTION:
+The entire response must be in ${languageName} language ONLY.
+Do NOT mix languages under any condition.
+Use simple, farmer-friendly words suitable for rural users.
 
 Input Context:
 - Crop Name: ${crop}
@@ -39,9 +55,10 @@ Guidelines:
 - Be helpful and practical
 - Consider seasonal variations
 - Include government MSP (Minimum Support Price) when applicable
-- Suggest ways to get better prices`;
+- Suggest ways to get better prices
+- RESPOND ONLY IN ${languageName.toUpperCase()} LANGUAGE.`;
 
-    console.log("Market insights request:", { crop, location, timeframe });
+    console.log("Market insights request:", { crop, location, timeframe, language });
 
     const userPrompt = `Provide market insights for:
 - Crop Name: ${crop}
@@ -53,7 +70,9 @@ Tasks:
 2. Advise whether to sell now or wait
 3. Suggest the best nearby market/mandi
 4. Give simple tips to maximize profit
-5. Include storage and transportation recommendations`;
+5. Include storage and transportation recommendations
+
+IMPORTANT: Respond ONLY in ${languageName} language.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

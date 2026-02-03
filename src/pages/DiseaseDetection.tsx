@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,6 +15,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/disease-dete
 
 const DiseaseDetection = () => {
   const { toast } = useToast();
+  const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -29,7 +31,7 @@ const DiseaseDetection = () => {
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: "File Too Large",
+          title: t("common.error"),
           description: "Please upload an image smaller than 5MB.",
           variant: "destructive",
         });
@@ -51,7 +53,7 @@ const DiseaseDetection = () => {
     
     if (!imageBase64 && !formData.symptoms) {
       toast({
-        title: "Missing Information",
+        title: t("common.error"),
         description: "Please upload an image or describe symptoms.",
         variant: "destructive",
       });
@@ -72,6 +74,7 @@ const DiseaseDetection = () => {
           imageBase64,
           cropType: formData.cropType,
           symptoms: formData.symptoms,
+          language,
         }),
       });
 
@@ -125,7 +128,7 @@ const DiseaseDetection = () => {
     } catch (error) {
       console.error("Error:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: "Failed to analyze. Please try again.",
         variant: "destructive",
       });
@@ -142,7 +145,7 @@ const DiseaseDetection = () => {
         <div className="container mx-auto px-4">
           <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            {t("nav.home")}
           </Link>
           
           <div className="max-w-4xl mx-auto">
@@ -151,19 +154,19 @@ const DiseaseDetection = () => {
                 <Bug className="w-6 h-6 text-secondary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground font-display">Disease Detection</h1>
-                <p className="text-muted-foreground">Upload leaf images for instant AI diagnosis</p>
+                <h1 className="text-3xl font-bold text-foreground font-display">{t("diseaseDetection.title")}</h1>
+                <p className="text-muted-foreground">{t("diseaseDetection.subtitle")}</p>
               </div>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Form */}
               <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Upload & Describe</h2>
+                <h2 className="text-xl font-semibold mb-4">{t("diseaseDetection.uploadTitle")}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Image Upload */}
                   <div className="space-y-2">
-                    <Label>Leaf Image</Label>
+                    <Label>{t("common.uploadImage")}</Label>
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -188,7 +191,7 @@ const DiseaseDetection = () => {
                             setImageBase64("");
                           }}
                         >
-                          Remove
+                          {t("common.cancel")}
                         </Button>
                       </div>
                     ) : (
@@ -197,27 +200,27 @@ const DiseaseDetection = () => {
                         className="w-full h-48 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
                       >
                         <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">Click to upload leaf image</p>
+                        <p className="text-sm text-muted-foreground">{t("diseaseDetection.uploadDesc")}</p>
                         <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cropType">Crop Type</Label>
+                    <Label htmlFor="cropType">{t("diseaseDetection.cropType")}</Label>
                     <Input
                       id="cropType"
-                      placeholder="e.g., Tomato, Rice, Wheat"
+                      placeholder={t("diseaseDetection.cropTypePlaceholder")}
                       value={formData.cropType}
                       onChange={(e) => setFormData({ ...formData, cropType: e.target.value })}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="symptoms">Describe Symptoms</Label>
+                    <Label htmlFor="symptoms">{t("diseaseDetection.symptoms")}</Label>
                     <Textarea
                       id="symptoms"
-                      placeholder="Describe what you observe: yellow spots, wilting, holes, etc."
+                      placeholder={t("diseaseDetection.symptomsPlaceholder")}
                       value={formData.symptoms}
                       onChange={(e) => setFormData({ ...formData, symptoms: e.target.value })}
                       rows={4}
@@ -228,12 +231,12 @@ const DiseaseDetection = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Analyzing...
+                        {t("common.analyzing")}
                       </>
                     ) : (
                       <>
                         <Camera className="w-4 h-4 mr-2" />
-                        Detect Disease
+                        {t("diseaseDetection.analyze")}
                       </>
                     )}
                   </Button>
@@ -250,7 +253,7 @@ const DiseaseDetection = () => {
                 ) : (
                   <div className="text-center text-muted-foreground py-12">
                     <Bug className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                    <p>Upload a leaf image or describe symptoms to get an AI-powered disease diagnosis and treatment plan.</p>
+                    <p>{t("diseaseDetection.subtitle")}</p>
                   </div>
                 )}
               </div>

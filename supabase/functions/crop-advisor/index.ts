@@ -5,20 +5,36 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const languageNames: Record<string, string> = {
+  en: "English",
+  te: "Telugu",
+  hi: "Hindi",
+  ta: "Tamil",
+  kn: "Kannada",
+  mr: "Marathi",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { soilType, climate, location, waterAvailability, farmSize, weather, coordinates } = await req.json();
+    const { soilType, climate, location, waterAvailability, farmSize, weather, coordinates, language = "en" } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const languageName = languageNames[language] || "English";
+
     const systemPrompt = `You are AgriPath AI, a LLaMA-powered smart farming assistant.
+
+CRITICAL INSTRUCTION:
+The entire response must be in ${languageName} language ONLY.
+Do NOT mix languages under any condition.
+Use simple, farmer-friendly words suitable for rural users.
 
 Your tasks:
 1. Analyze the farm and weather conditions.
@@ -42,7 +58,8 @@ Guidelines:
 - Avoid technical jargon.
 - Focus on cost-effective and sustainable practices.
 - Consider local farming practices in India.
-- Be encouraging and supportive of farmers.`;
+- Be encouraging and supportive of farmers.
+- RESPOND ONLY IN ${languageName.toUpperCase()} LANGUAGE.`;
 
     let weatherContext = "";
     if (weather) {
@@ -75,9 +92,11 @@ Your tasks:
 3. Explain clearly why each crop is suitable.
 4. Select the best crop and recommend it.
 
-For the selected crop, provide complete guidance.`;
+For the selected crop, provide complete guidance.
 
-    console.log("Crop advisor request:", { soilType, climate, location, farmSize, hasWeather: !!weather });
+IMPORTANT: Respond ONLY in ${languageName} language.`;
+
+    console.log("Crop advisor request:", { soilType, climate, location, farmSize, hasWeather: !!weather, language });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

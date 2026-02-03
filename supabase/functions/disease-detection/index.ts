@@ -5,20 +5,36 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const languageNames: Record<string, string> = {
+  en: "English",
+  te: "Telugu",
+  hi: "Hindi",
+  ta: "Tamil",
+  kn: "Kannada",
+  mr: "Marathi",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { imageBase64, cropType, symptoms, location, severity } = await req.json();
+    const { imageBase64, cropType, symptoms, location, severity, language = "en" } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const languageName = languageNames[language] || "English";
+
     const systemPrompt = `You are AgriPath AI, an agricultural disease expert powered by LLaMA.
+
+CRITICAL INSTRUCTION:
+The entire response must be in ${languageName} language ONLY.
+Do NOT mix languages under any condition.
+Use simple, farmer-friendly words suitable for rural users.
 
 Input Context:
 - Crop Name: ${cropType || 'Unknown'}
@@ -40,16 +56,17 @@ Guidelines:
 - Use simple, farmer-friendly language
 - Provide both organic and chemical treatment options
 - Include safety warnings for pesticides
-- Be thorough but easy to understand`;
+- Be thorough but easy to understand
+- RESPOND ONLY IN ${languageName.toUpperCase()} LANGUAGE.`;
 
-    console.log("Disease detection request:", { cropType, hasImage: !!imageBase64, symptoms: symptoms?.substring(0, 50) });
+    console.log("Disease detection request:", { cropType, hasImage: !!imageBase64, symptoms: symptoms?.substring(0, 50), language });
 
     const userContent = imageBase64 
       ? [
-          { type: "text", text: `Analyze this plant image for diseases.\n\nCrop type: ${cropType || 'Unknown'}\nLocation: ${location || 'India'}\nAdditional symptoms reported: ${symptoms || 'None specified'}\n\nPlease provide a detailed diagnosis and complete treatment plan.` },
+          { type: "text", text: `Analyze this plant image for diseases.\n\nCrop type: ${cropType || 'Unknown'}\nLocation: ${location || 'India'}\nAdditional symptoms reported: ${symptoms || 'None specified'}\n\nPlease provide a detailed diagnosis and complete treatment plan in ${languageName} language ONLY.` },
           { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
         ]
-      : `I need help diagnosing a plant disease.\n\nCrop type: ${cropType || 'Unknown'}\nLocation: ${location || 'India'}\nSymptoms: ${symptoms}\n\nPlease provide possible diagnoses and complete treatment recommendations.`;
+      : `I need help diagnosing a plant disease.\n\nCrop type: ${cropType || 'Unknown'}\nLocation: ${location || 'India'}\nSymptoms: ${symptoms}\n\nPlease provide possible diagnoses and complete treatment recommendations in ${languageName} language ONLY.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

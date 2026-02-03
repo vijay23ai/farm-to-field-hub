@@ -1,24 +1,27 @@
 import { Zap, Shield, Languages } from "lucide-react";
-
-const benefits = [
-  {
-    icon: Zap,
-    title: "Real-time Analysis",
-    description: "Get instant recommendations based on current conditions",
-  },
-  {
-    icon: Shield,
-    title: "Trusted by Farmers",
-    description: "Backed by agricultural research and farmer feedback",
-  },
-  {
-    icon: Languages,
-    title: "Multilingual Support",
-    description: "Available in 6 regional languages for easy access",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const WhyChooseSection = () => {
+  const { t } = useLanguage();
+
+  const benefits = [
+    {
+      icon: Zap,
+      title: t("why.realtime"),
+      description: t("why.realtimeDesc"),
+    },
+    {
+      icon: Shield,
+      title: t("why.trusted"),
+      description: t("why.trustedDesc"),
+    },
+    {
+      icon: Languages,
+      title: t("why.multilingual"),
+      description: t("why.multilingualDesc"),
+    },
+  ];
+
   return (
     <section className="py-20 md:py-28 bg-muted/50">
       <div className="container mx-auto px-4">
@@ -26,10 +29,10 @@ const WhyChooseSection = () => {
           {/* Left Content */}
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6 font-display">
-              Why Choose AgriPath AI?
+              {t("why.title")}
             </h2>
             <p className="text-lg text-muted-foreground mb-10">
-              We combine cutting-edge AI technology with deep agricultural expertise to bring you the most accurate and actionable insights.
+              {t("why.subtitle")}
             </p>
             
             {/* Benefits List */}
@@ -57,10 +60,10 @@ const WhyChooseSection = () => {
                     <Zap className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="text-xl font-bold text-foreground text-center mb-2 font-display">
-                    Your Digital Krushi Mitra
+                    {t("why.phoneTitle")}
                   </h3>
                   <p className="text-muted-foreground text-center text-sm">
-                    AI-powered farming assistant in your pocket
+                    {t("why.phoneDesc")}
                   </p>
                 </div>
               </div>

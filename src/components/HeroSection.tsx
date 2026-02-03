@@ -1,15 +1,19 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
-
-const stats = [
-  { value: "50K+", label: "Active Farmers" },
-  { value: "95%", label: "Accuracy Rate" },
-  { value: "100+", label: "Crop Types" },
-  { value: "6", label: "Languages" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HeroSection = () => {
+  const { t } = useLanguage();
+
+  const stats = [
+    { value: "50K+", label: t("hero.activeFarmers") },
+    { value: "95%", label: t("hero.accuracyRate") },
+    { value: "100+", label: t("hero.cropTypes") },
+    { value: "6", label: t("hero.languages") },
+  ];
+
   return (
     <section className="relative min-h-screen flex items-center justify-start overflow-hidden">
       {/* Background Image */}
@@ -27,32 +31,36 @@ const HeroSection = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30 mb-6">
             <Sparkles className="w-4 h-4 text-secondary" />
-            <span className="text-sm font-medium text-primary-foreground/90">AI-Powered Agriculture Platform</span>
+            <span className="text-sm font-medium text-primary-foreground/90">{t("hero.badge")}</span>
           </div>
           
           {/* Heading */}
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-primary-foreground mb-6 font-display">
-            Smart Farming with AI
+            {t("hero.title")}
           </h1>
           
           {/* Description */}
           <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-xl">
-            Empowering farmers with intelligent crop selection, disease detection, and market insights
+            {t("hero.description")}
           </p>
           
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-4">
-            <Button size="lg" className="rounded-full px-8 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-              Get Started
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="rounded-full px-8 bg-background/10 border-primary-foreground/30 text-primary-foreground hover:bg-background/20 hover:text-primary-foreground backdrop-blur-sm"
-            >
-              Learn More
-            </Button>
+            <Link to="/crop-advisor">
+              <Button size="lg" className="rounded-full px-8 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+                {t("hero.getStarted")}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link to="/ask-ai">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="rounded-full px-8 bg-background/10 border-primary-foreground/30 text-primary-foreground hover:bg-background/20 hover:text-primary-foreground backdrop-blur-sm"
+              >
+                {t("hero.learnMore")}
+              </Button>
+            </Link>
           </div>
         </div>
         
