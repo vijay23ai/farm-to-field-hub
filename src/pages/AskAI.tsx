@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MessageCircle, ArrowLeft, Loader2, MapPin, Cloud, Send } from "lucide-react";
+import { MessageCircle, ArrowLeft, Loader2, MapPin, Cloud, Send, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useVoice } from "@/hooks/useVoice";
 import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,13 +21,31 @@ const AskAI = () => {
   const { location, getLocation } = useGeolocation();
   const { weather, fetchWeather } = useWeather();
   const { t, language } = useLanguage();
+  const voice = useVoice({ language });
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [question, setQuestion] = useState("");
+  const [autoSpeak, setAutoSpeak] = useState(false);
   const [formData, setFormData] = useState({
     crop: "",
     season: "",
   });
+
+  // Update question when voice transcript changes
+  useEffect(() => {
+    if (voice.transcript) {
+      setQuestion(prev => prev + " " + voice.transcript);
+    }
+  }, [voice.transcript]);
+
+  // Auto-speak response when complete
+  useEffect(() => {
+    if (autoSpeak && response && !isLoading) {
+      // Extract plain text from markdown for speaking
+      const plainText = response.replace(/[#*_`\[\]]/g, "").substring(0, 500);
+      voice.speak(plainText);
+    }
+  }, [response, isLoading, autoSpeak]);
 
   // Fetch weather when location is available
   useEffect(() => {
@@ -247,7 +266,60 @@ const AskAI = () => {
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="question">{t("common.askQuestion")}</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="question">{t("common.askQuestion")}</Label>
+                        <div className="flex items-center gap-2">
+                          {/* Voice Input Button */}
+                          {voice.isSupported && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={voice.isListening ? "destructive" : "outline"}
+                              onClick={voice.isListening ? voice.stopListening : voice.startListening}
+                              className="gap-1"
+                            >
+                              {voice.isListening ? (
+                                <>
+                                  <MicOff className="w-4 h-4" />
+                                  <span className="text-xs">Stop</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Mic className="w-4 h-4" />
+                                  <span className="text-xs">{t("voice.speak")}</span>
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          {/* Auto-Speak Toggle */}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={autoSpeak ? "default" : "outline"}
+                            onClick={() => setAutoSpeak(!autoSpeak)}
+                            className="gap-1"
+                          >
+                            {autoSpeak ? (
+                              <Volume2 className="w-4 h-4" />
+                            ) : (
+                              <VolumeX className="w-4 h-4" />
+                            )}
+                            <span className="text-xs">{t("voice.autoSpeak")}</span>
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {voice.isListening && (
+                        <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded-lg text-sm text-destructive">
+                          <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+                          {t("voice.listening")}
+                        </div>
+                      )}
+                      
+                      {voice.error && (
+                        <p className="text-xs text-destructive">{voice.error}</p>
+                      )}
+                      
                       <Textarea
                         id="question"
                         placeholder={t("askAi.placeholder")}
@@ -258,19 +330,41 @@ const AskAI = () => {
                       />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {t("common.analyzing")}
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          {t("nav.askAi")}
-                        </>
+                    <div className="flex gap-2">
+                      <Button type="submit" className="flex-1" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            {t("common.analyzing")}
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            {t("nav.askAi")}
+                          </>
+                        )}
+                      </Button>
+                      {response && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            if (voice.isSpeaking) {
+                              voice.stopSpeaking();
+                            } else {
+                              const plainText = response.replace(/[#*_`\[\]]/g, "").substring(0, 500);
+                              voice.speak(plainText);
+                            }
+                          }}
+                        >
+                          {voice.isSpeaking ? (
+                            <VolumeX className="w-4 h-4" />
+                          ) : (
+                            <Volume2 className="w-4 h-4" />
+                          )}
+                        </Button>
                       )}
-                    </Button>
+                    </div>
                   </form>
 
                   {/* Response */}

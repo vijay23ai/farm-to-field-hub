@@ -214,6 +214,12 @@ const translations: Record<Language, Record<string, string>> = {
     "askAi.cropPlaceholder": "Current crop (optional)",
     "askAi.seasonPlaceholder": "Current season (optional)",
     
+    // Voice
+    "voice.speak": "Speak",
+    "voice.listening": "Listening... Speak now",
+    "voice.autoSpeak": "Auto-speak",
+    "voice.speakResponse": "Speak Response",
+    
     // Auth
     "auth.loginTitle": "Welcome Back",
     "auth.signupTitle": "Create Account",
@@ -362,6 +368,12 @@ const translations: Record<Language, Record<string, string>> = {
     "askAi.cropPlaceholder": "ప్రస్తుత పంట (ఐచ్ఛికం)",
     "askAi.seasonPlaceholder": "ప్రస్తుత సీజన్ (ఐచ్ఛికం)",
     
+    // Voice
+    "voice.speak": "మాట్లాడండి",
+    "voice.listening": "వింటోంది... ఇప్పుడు మాట్లాడండి",
+    "voice.autoSpeak": "ఆటో-మాట్లాడు",
+    "voice.speakResponse": "సమాధానం చదవండి",
+    
     // Auth
     "auth.loginTitle": "తిరిగి స్వాగతం",
     "auth.signupTitle": "ఖాతాను సృష్టించండి",
@@ -509,6 +521,12 @@ const translations: Record<Language, Record<string, string>> = {
     "askAi.contextTitle": "वैकल्पिक संदर्भ",
     "askAi.cropPlaceholder": "वर्तमान फसल (वैकल्पिक)",
     "askAi.seasonPlaceholder": "वर्तमान मौसम (वैकल्पिक)",
+    
+    // Voice
+    "voice.speak": "बोलें",
+    "voice.listening": "सुन रहे हैं... अब बोलें",
+    "voice.autoSpeak": "ऑटो-बोलें",
+    "voice.speakResponse": "जवाब सुनें",
     
     // Auth
     "auth.loginTitle": "वापसी पर स्वागत है",
