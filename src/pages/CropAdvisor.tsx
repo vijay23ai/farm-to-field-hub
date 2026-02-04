@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Leaf, ArrowLeft, Loader2, MapPin, Cloud } from "lucide-react";
+import { Leaf, ArrowLeft, Loader2, MapPin, Cloud, Volume2, VolumeX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useVoice } from "@/hooks/useVoice";
 import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,6 +21,7 @@ const CropAdvisor = () => {
   const { location, getLocation } = useGeolocation();
   const { weather, fetchWeather } = useWeather();
   const { t, language } = useLanguage();
+  const voice = useVoice({ language });
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [formData, setFormData] = useState({
@@ -305,7 +307,30 @@ const CropAdvisor = () => {
 
               {/* Results */}
               <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">AI {t("common.getRecommendations")}</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">AI {t("common.getRecommendations")}</h2>
+                  {response && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (voice.isSpeaking) {
+                          voice.stopSpeaking();
+                        } else {
+                          const plainText = response.replace(/[#*_`\[\]]/g, "").substring(0, 500);
+                          voice.speak(plainText);
+                        }
+                      }}
+                    >
+                      {voice.isSpeaking ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                      <span className="ml-2 text-xs">{t("voice.speakResponse")}</span>
+                    </Button>
+                  )}
+                </div>
                 {response ? (
                   <div className="prose prose-sm max-w-none text-foreground">
                     <ReactMarkdown>{response}</ReactMarkdown>
