@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import WhyChooseSection from "@/components/WhyChooseSection";
 import CTASection from "@/components/CTASection";
+import WhatsAppCTA from "@/components/WhatsAppCTA";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -12,6 +13,7 @@ const Index = () => {
       <HeroSection />
       <FeaturesSection />
       <WhyChooseSection />
+      <WhatsAppCTA />
       <CTASection />
       <Footer />
     </div>
