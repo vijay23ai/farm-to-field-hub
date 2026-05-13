@@ -20,11 +20,40 @@ serve(async (req) => {
   }
 
   try {
-    const { soilType, climate, location, waterAvailability, farmSize, weather, coordinates, language = "en" } = await req.json();
-    
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const sanitize = (v: unknown, max = 200) =>
+      typeof v === "string" ? v.replace(/[\r\n]+/g, " ").trim().slice(0, max) : "";
+    const soilType = sanitize((body as any).soilType, 100);
+    const climate = sanitize((body as any).climate, 100);
+    const location = sanitize((body as any).location, 200);
+    const waterAvailability = sanitize((body as any).waterAvailability, 100);
+    const farmSize = sanitize((body as any).farmSize, 50);
+    const weather = (body as any).weather && typeof (body as any).weather === "object" ? (body as any).weather : null;
+    const coordinates = (body as any).coordinates && typeof (body as any).coordinates === "object" ? (body as any).coordinates : null;
+    const rawLang = sanitize((body as any).language, 5) || "en";
+    const allowedLangs = ["en", "te", "hi", "ta", "kn", "mr"];
+    const language = allowedLangs.includes(rawLang) ? rawLang : "en";
+
+    if (!soilType || !location) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("LOVABLE_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "Service temporarily unavailable" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const languageName = languageNames[language] || "English";
@@ -63,19 +92,21 @@ Guidelines:
 
     let weatherContext = "";
     if (weather) {
+      const w = weather as any;
       weatherContext = `
 Weather Data:
-- Temperature: ${weather.temperature} °C
-- Humidity: ${weather.humidity} %
-- Rainfall: ${weather.rainfall}
-- Weather Forecast: ${weather.forecast}`;
+- Temperature: ${sanitize(w.temperature, 20)} °C
+- Humidity: ${sanitize(w.humidity, 20)} %
+- Rainfall: ${sanitize(w.rainfall, 50)}
+- Weather Forecast: ${sanitize(w.forecast, 200)}`;
     }
 
     let coordContext = "";
     if (coordinates) {
+      const c = coordinates as any;
       coordContext = `
-- Latitude: ${coordinates.latitude}
-- Longitude: ${coordinates.longitude}`;
+- Latitude: ${sanitize(String(c.latitude), 30)}
+- Longitude: ${sanitize(String(c.longitude), 30)}`;
     }
 
     const userPrompt = `Farmer Context:
@@ -140,8 +171,7 @@ IMPORTANT: Respond ONLY in ${languageName} language.`;
     });
   } catch (error) {
     console.error("Crop advisor error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "An error occurred processing your request. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

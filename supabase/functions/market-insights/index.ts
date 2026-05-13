@@ -20,11 +20,36 @@ serve(async (req) => {
   }
 
   try {
-    const { crop, location, timeframe, language = "en" } = await req.json();
-    
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const sanitize = (v: unknown, max = 200) =>
+      typeof v === "string" ? v.replace(/[\r\n]+/g, " ").trim().slice(0, max) : "";
+    const crop = sanitize((body as any).crop, 100);
+    const location = sanitize((body as any).location, 200);
+    const timeframe = sanitize((body as any).timeframe, 100);
+    const rawLang = sanitize((body as any).language, 5) || "en";
+    const allowedLangs = ["en", "te", "hi", "ta", "kn", "mr"];
+    const language = allowedLangs.includes(rawLang) ? rawLang : "en";
+
+    if (!crop || !location) {
+      return new Response(JSON.stringify({ error: "Crop and location are required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("LOVABLE_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "Service temporarily unavailable" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const languageName = languageNames[language] || "English";
@@ -116,8 +141,7 @@ IMPORTANT: Respond ONLY in ${languageName} language.`;
     });
   } catch (error) {
     console.error("Market insights error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "An error occurred processing your request. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
