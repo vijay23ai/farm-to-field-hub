@@ -20,11 +20,52 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, cropType, symptoms, location, severity, language = "en" } = await req.json();
-    
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const sanitize = (v: unknown, max = 200) =>
+      typeof v === "string" ? v.replace(/[\r\n]+/g, " ").trim().slice(0, max) : "";
+    const imageBase64Raw = (body as any).imageBase64;
+    const imageBase64 = typeof imageBase64Raw === "string" ? imageBase64Raw : "";
+    const cropType = sanitize((body as any).cropType, 100);
+    const symptoms = sanitize((body as any).symptoms, 1000);
+    const location = sanitize((body as any).location, 200);
+    const severity = sanitize((body as any).severity, 50);
+    const rawLang = sanitize((body as any).language, 5) || "en";
+    const allowedLangs = ["en", "te", "hi", "ta", "kn", "mr"];
+    const language = allowedLangs.includes(rawLang) ? rawLang : "en";
+
+    // Limit base64 image size (~7MB raw -> ~10MB base64)
+    if (imageBase64 && imageBase64.length > 10_000_000) {
+      return new Response(JSON.stringify({ error: "Image too large" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (imageBase64 && !/^[A-Za-z0-9+/=\s]+$/.test(imageBase64.slice(0, 200))) {
+      return new Response(JSON.stringify({ error: "Invalid image format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!imageBase64 && !symptoms) {
+      return new Response(JSON.stringify({ error: "Provide an image or symptoms" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("LOVABLE_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "Service temporarily unavailable" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const languageName = languageNames[language] || "English";
@@ -110,8 +151,7 @@ Guidelines:
     });
   } catch (error) {
     console.error("Disease detection error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "An error occurred processing your request. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
