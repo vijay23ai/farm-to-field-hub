@@ -145,15 +145,34 @@ serve(async (req) => {
   try {
     const contentType = req.headers.get("content-type") || "";
     let payload: Record<string, string> = {};
-    if (contentType.includes("application/x-www-form-urlencoded")) {
-      const form = await req.formData();
-      form.forEach((v, k) => (payload[k] = String(v)));
-    } else if (contentType.includes("application/json")) {
+    let rawText = "";
+    if (contentType.includes("application/json")) {
       payload = await req.json();
     } else {
-      const text = await req.text();
-      const params = new URLSearchParams(text);
+      rawText = await req.text();
+      const params = new URLSearchParams(rawText);
       params.forEach((v, k) => (payload[k] = v));
+    }
+
+    // Verify Twilio signature — reject forged webhooks.
+    const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+    if (!TWILIO_AUTH_TOKEN) {
+      console.error("TWILIO_AUTH_TOKEN not set — rejecting webhook to prevent spoofing.");
+      return new Response("Forbidden", { status: 403, headers: corsHeaders });
+    }
+    const sigHeader = req.headers.get("x-twilio-signature") || "";
+    if (!sigHeader) {
+      return new Response("Forbidden", { status: 403, headers: corsHeaders });
+    }
+    // Twilio signs the public URL it POSTed to. Use forwarded-host/proto if present.
+    const fwdHost = req.headers.get("x-forwarded-host") || req.headers.get("host");
+    const fwdProto = req.headers.get("x-forwarded-proto") || "https";
+    const reqUrl = new URL(req.url);
+    const signedUrl = fwdHost ? `${fwdProto}://${fwdHost}${reqUrl.pathname}${reqUrl.search}` : req.url;
+    const valid = await isValidTwilioSignature(TWILIO_AUTH_TOKEN, sigHeader, signedUrl, payload);
+    if (!valid) {
+      console.error("Invalid Twilio signature", { signedUrl });
+      return new Response("Forbidden", { status: 403, headers: corsHeaders });
     }
 
     const from = payload.From || ""; // e.g. "whatsapp:+9198..."
