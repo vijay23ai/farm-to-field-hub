@@ -22,6 +22,37 @@ const SYSTEM_PROMPT = `You are AgriPath AI, a friendly LLaMA-powered farming ass
 - For crop advice: give practical, low-cost steps.
 - Never say "I am an AI". Speak like a helpful farmer friend.`;
 
+// Validate Twilio webhook signature: HMAC-SHA1 of (url + sorted k+v pairs), base64.
+// https://www.twilio.com/docs/usage/webhooks/webhooks-security
+async function isValidTwilioSignature(
+  authToken: string,
+  signature: string,
+  url: string,
+  params: Record<string, string>,
+): Promise<boolean> {
+  const sortedKeys = Object.keys(params).sort();
+  let data = url;
+  for (const k of sortedKeys) data += k + params[k];
+
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(authToken),
+    { name: "HMAC", hash: "SHA-1" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
+  // constant-time compare
+  if (expected.length !== signature.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 async function callAI(messages: any[]) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
