@@ -1,12 +1,13 @@
 import { useState, useRef } from "react";
 import { Bug, ArrowLeft, Loader2, Upload, Camera } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,6 +16,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/disease-dete
 
 const DiseaseDetection = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState("");
@@ -64,11 +66,22 @@ const DiseaseDetection = () => {
     setResponse("");
 
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        toast({
+          title: "Login Required",
+          description: "Please log in to analyze crops securely.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           imageBase64,
@@ -79,6 +92,11 @@ const DiseaseDetection = () => {
       });
 
       if (!resp.ok || !resp.body) {
+        if (resp.status === 401) {
+          toast({ title: "Login Required", description: "Please log in and try again.", variant: "destructive" });
+          navigate("/auth");
+          return;
+        }
         if (resp.status === 429) {
           toast({ title: "Rate Limited", description: "Please try again later.", variant: "destructive" });
           return;
