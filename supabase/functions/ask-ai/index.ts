@@ -20,11 +20,39 @@ serve(async (req) => {
   }
 
   try {
-    const { question, location, crop, season, weather, language = "en" } = await req.json();
-    
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const sanitize = (v: unknown, max = 500) =>
+      typeof v === "string" ? v.replace(/[\r\n]+/g, " ").trim().slice(0, max) : "";
+
+    const question = sanitize((body as any).question, 2000);
+    const location = sanitize((body as any).location, 200);
+    const crop = sanitize((body as any).crop, 100);
+    const season = sanitize((body as any).season, 50);
+    const weather = (body as any).weather && typeof (body as any).weather === "object" ? (body as any).weather : null;
+    const rawLang = sanitize((body as any).language, 5) || "en";
+    const allowedLangs = ["en", "te", "hi", "ta", "kn", "mr"];
+    const language = allowedLangs.includes(rawLang) ? rawLang : "en";
+
+    if (!question) {
+      return new Response(JSON.stringify({ error: "Question is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("LOVABLE_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "Service temporarily unavailable" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const languageName = languageNames[language] || "English";
@@ -62,7 +90,8 @@ Guidelines:
     if (crop) contextInfo += `\n- Current Crop: ${crop}`;
     if (season) contextInfo += `\n- Season: ${season}`;
     if (weather) {
-      contextInfo += `\n- Current Weather: ${weather.temperature}°C, ${weather.humidity}% humidity, ${weather.rainfall} rainfall, ${weather.forecast}`;
+      const w = weather as any;
+      contextInfo += `\n- Current Weather: ${sanitize(w.temperature, 20)}°C, ${sanitize(w.humidity, 20)}% humidity, ${sanitize(w.rainfall, 50)} rainfall, ${sanitize(w.forecast, 200)}`;
     }
 
     const userPrompt = `User Question:
@@ -116,8 +145,7 @@ Please provide a helpful, farmer-friendly response in ${languageName} language O
     });
   } catch (error) {
     console.error("Ask AI error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "An error occurred processing your request. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
