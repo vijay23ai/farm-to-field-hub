@@ -22,6 +22,37 @@ const SYSTEM_PROMPT = `You are AgriPath AI, a friendly LLaMA-powered farming ass
 - For crop advice: give practical, low-cost steps.
 - Never say "I am an AI". Speak like a helpful farmer friend.`;
 
+// Validate Twilio webhook signature: HMAC-SHA1 of (url + sorted k+v pairs), base64.
+// https://www.twilio.com/docs/usage/webhooks/webhooks-security
+async function isValidTwilioSignature(
+  authToken: string,
+  signature: string,
+  url: string,
+  params: Record<string, string>,
+): Promise<boolean> {
+  const sortedKeys = Object.keys(params).sort();
+  let data = url;
+  for (const k of sortedKeys) data += k + params[k];
+
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(authToken),
+    { name: "HMAC", hash: "SHA-1" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
+  // constant-time compare
+  if (expected.length !== signature.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 async function callAI(messages: any[]) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -114,15 +145,34 @@ serve(async (req) => {
   try {
     const contentType = req.headers.get("content-type") || "";
     let payload: Record<string, string> = {};
-    if (contentType.includes("application/x-www-form-urlencoded")) {
-      const form = await req.formData();
-      form.forEach((v, k) => (payload[k] = String(v)));
-    } else if (contentType.includes("application/json")) {
+    let rawText = "";
+    if (contentType.includes("application/json")) {
       payload = await req.json();
     } else {
-      const text = await req.text();
-      const params = new URLSearchParams(text);
+      rawText = await req.text();
+      const params = new URLSearchParams(rawText);
       params.forEach((v, k) => (payload[k] = v));
+    }
+
+    // Verify Twilio signature — reject forged webhooks.
+    const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+    if (!TWILIO_AUTH_TOKEN) {
+      console.error("TWILIO_AUTH_TOKEN not set — rejecting webhook to prevent spoofing.");
+      return new Response("Forbidden", { status: 403, headers: corsHeaders });
+    }
+    const sigHeader = req.headers.get("x-twilio-signature") || "";
+    if (!sigHeader) {
+      return new Response("Forbidden", { status: 403, headers: corsHeaders });
+    }
+    // Twilio signs the public URL it POSTed to. Use forwarded-host/proto if present.
+    const fwdHost = req.headers.get("x-forwarded-host") || req.headers.get("host");
+    const fwdProto = req.headers.get("x-forwarded-proto") || "https";
+    const reqUrl = new URL(req.url);
+    const signedUrl = fwdHost ? `${fwdProto}://${fwdHost}${reqUrl.pathname}${reqUrl.search}` : req.url;
+    const valid = await isValidTwilioSignature(TWILIO_AUTH_TOKEN, sigHeader, signedUrl, payload);
+    if (!valid) {
+      console.error("Invalid Twilio signature", { signedUrl });
+      return new Response("Forbidden", { status: 403, headers: corsHeaders });
     }
 
     const from = payload.From || ""; // e.g. "whatsapp:+9198..."
