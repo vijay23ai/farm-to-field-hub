@@ -60,19 +60,12 @@ const Auth = () => {
         });
 
         if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast({
-              title: "Login Failed",
-              description: "Invalid email or password. Please try again.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Login Failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          console.error("Login error:", error);
+          toast({
+            title: "Login Failed",
+            description: "Invalid email or password. Please try again.",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -96,19 +89,12 @@ const Auth = () => {
         });
 
         if (error) {
-          if (error.message.includes("already registered")) {
-            toast({
-              title: "Account Exists",
-              description: "This email is already registered. Please login instead.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Signup Failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          console.error("Signup error:", error);
+          toast({
+            title: "Signup Failed",
+            description: "We couldn't complete your signup. Please try again.",
+            variant: "destructive",
+          });
           return;
         }
 
