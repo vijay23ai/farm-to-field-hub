@@ -14,6 +14,7 @@ const Header = () => {
 
   const navLinks = [
     { name: t("nav.home"), href: "/" },
+    { name: "Robo", href: "/robo" },
     { name: t("nav.cropAdvisor"), href: "/crop-advisor" },
     { name: t("nav.diseaseDetection"), href: "/disease-detection" },
     { name: t("nav.marketInsights"), href: "/market-insights" },
