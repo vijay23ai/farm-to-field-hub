@@ -12,6 +12,7 @@ import Community from "./pages/Community";
 import AskAI from "./pages/AskAI";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Robo from "./pages/Robo";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/ask-ai" element={<AskAI />} />
+            <Route path="/robo" element={<Robo />} />
             <Route path="/crop-advisor" element={<CropAdvisor />} />
             <Route path="/disease-detection" element={<DiseaseDetection />} />
             <Route path="/market-insights" element={<MarketInsights />} />
