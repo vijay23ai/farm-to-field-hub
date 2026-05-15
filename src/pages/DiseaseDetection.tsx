@@ -172,15 +172,16 @@ const DiseaseDetection = () => {
                 <Bug className="w-6 h-6 text-secondary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground font-display">{t("diseaseDetection.title")}</h1>
+                <h1 className="text-3xl font-bold font-display gradient-text">{t("diseaseDetection.title")}</h1>
                 <p className="text-muted-foreground">{t("diseaseDetection.subtitle")}</p>
               </div>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Form */}
-              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">{t("diseaseDetection.uploadTitle")}</h2>
+              <div className="neon-border rounded-2xl p-6">
+                <div className="relative z-10">
+                <h2 className="text-xl font-semibold mb-4 gradient-text">{t("diseaseDetection.uploadTitle")}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Image Upload */}
                   <div className="space-y-2">
@@ -197,7 +198,7 @@ const DiseaseDetection = () => {
                         <img 
                           src={imagePreview} 
                           alt="Uploaded leaf" 
-                          className="w-full h-48 object-cover rounded-xl border border-border"
+                          className="w-full h-48 object-cover rounded-xl border border-border/60"
                         />
                         <Button
                           type="button"
@@ -213,13 +214,15 @@ const DiseaseDetection = () => {
                         </Button>
                       </div>
                     ) : (
-                      <div 
+                      <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full h-48 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                        className="neon-border neon-border-thin w-full h-48 rounded-xl flex flex-col items-center justify-center cursor-pointer"
                       >
-                        <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">{t("diseaseDetection.uploadDesc")}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
+                        <div className="relative z-10 flex flex-col items-center">
+                          <Upload className="w-8 h-8 text-primary mb-2" />
+                          <p className="text-sm text-foreground/80">{t("diseaseDetection.uploadDesc")}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -228,6 +231,7 @@ const DiseaseDetection = () => {
                     <Label htmlFor="cropType">{t("diseaseDetection.cropType")}</Label>
                     <Input
                       id="cropType"
+                      className="neon-input"
                       placeholder={t("diseaseDetection.cropTypePlaceholder")}
                       value={formData.cropType}
                       onChange={(e) => setFormData({ ...formData, cropType: e.target.value })}
@@ -238,6 +242,7 @@ const DiseaseDetection = () => {
                     <Label htmlFor="symptoms">{t("diseaseDetection.symptoms")}</Label>
                     <Textarea
                       id="symptoms"
+                      className="neon-input"
                       placeholder={t("diseaseDetection.symptomsPlaceholder")}
                       value={formData.symptoms}
                       onChange={(e) => setFormData({ ...formData, symptoms: e.target.value })}
@@ -245,7 +250,8 @@ const DiseaseDetection = () => {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <button type="submit" disabled={isLoading} className="neon-border neon-border-thin w-full rounded-full disabled:opacity-60">
+                    <span className="relative z-10 flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium text-foreground">
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -257,23 +263,27 @@ const DiseaseDetection = () => {
                         {t("diseaseDetection.analyze")}
                       </>
                     )}
-                  </Button>
+                    </span>
+                  </button>
                 </form>
+                </div>
               </div>
 
               {/* Results */}
-              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">AI Diagnosis</h2>
+              <div className="neon-border rounded-2xl p-6">
+                <div className="relative z-10">
+                <h2 className="text-xl font-semibold mb-4 gradient-text">AI Diagnosis</h2>
                 {response ? (
                   <div className="prose prose-sm max-w-none text-foreground">
                     <ReactMarkdown>{response}</ReactMarkdown>
                   </div>
                 ) : (
                   <div className="text-center text-muted-foreground py-12">
-                    <Bug className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <Bug className="w-12 h-12 mx-auto mb-4 opacity-30 text-primary" />
                     <p>{t("diseaseDetection.subtitle")}</p>
                   </div>
                 )}
+                </div>
               </div>
             </div>
           </div>
