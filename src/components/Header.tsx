@@ -107,7 +107,7 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
+          <div className="relative z-10 md:hidden py-4 border-t border-border/60">
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link
