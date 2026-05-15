@@ -41,36 +41,36 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <header className="fixed top-4 left-4 right-4 z-50">
+      <div className="neon-border rounded-2xl px-4 md:px-6">
+        <div className="relative z-10 flex items-center justify-between h-14">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Sprout className="w-6 h-6 text-primary-foreground" />
+          <Link to="/" className="flex items-center gap-2.5 neon-border neon-border-thin rounded-xl pl-2 pr-3 py-1.5">
+            <div className="relative z-10 w-8 h-8 rounded-lg bg-background/70 flex items-center justify-center">
+              <Sprout className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-xl font-semibold">
-              <span className="text-foreground">Agri</span>
-              <span className="text-primary">Path</span>
-              <span className="text-foreground"> AI</span>
+            <span className="relative z-10 text-lg font-semibold tracking-tight gradient-text">
+              AgriPath AI
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="neon-border neon-border-thin rounded-full"
               >
-                {link.name}
+                <span className="relative z-10 block px-4 py-1.5 text-xs font-medium text-foreground/85 hover:text-primary transition-colors">
+                  {link.name}
+                </span>
               </Link>
             ))}
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center gap-3">
+          <div className="relative z-10 flex items-center gap-3">
             <LanguageSelector />
             
             {user ? (
