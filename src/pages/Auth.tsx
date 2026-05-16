@@ -92,7 +92,7 @@ const Auth = () => {
           console.error("Signup error:", error);
           toast({
             title: "Signup Failed",
-            description: "We couldn't complete your signup. Please try again.",
+            description: error.message || "We couldn't complete your signup. Please try again.",
             variant: "destructive",
           });
           return;
