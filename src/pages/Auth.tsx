@@ -7,6 +7,34 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+const COMMON_WEAK_PASSWORDS = new Set([
+  "password", "password1", "password123", "passw0rd", "12345678", "123456789",
+  "qwerty123", "qwertyuiop", "1q2w3e4r", "abc12345", "iloveyou", "admin123",
+  "welcome1", "letmein1", "monkey123", "dragon123", "sunshine", "princess1",
+  "football1", "baseball1",
+]);
+
+type PwChecks = {
+  length: boolean;
+  upper: boolean;
+  lower: boolean;
+  number: boolean;
+  special: boolean;
+  notCommon: boolean;
+};
+
+const evaluatePassword = (pw: string): PwChecks => ({
+  length: pw.length >= 8,
+  upper: /[A-Z]/.test(pw),
+  lower: /[a-z]/.test(pw),
+  number: /[0-9]/.test(pw),
+  special: /[^A-Za-z0-9]/.test(pw),
+  notCommon: pw.length > 0 && !COMMON_WEAK_PASSWORDS.has(pw.toLowerCase()),
+});
+
+const passwordScore = (c: PwChecks) =>
+  Object.values(c).filter(Boolean).length;
+
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -19,6 +47,20 @@ const Auth = () => {
     confirmPassword: "",
     fullName: "",
   });
+
+  const pwChecks = evaluatePassword(formData.password);
+  const pwScore = passwordScore(pwChecks);
+  const pwValid = pwScore === 6;
+  const strengthLabel =
+    pwScore <= 2 ? "Weak" : pwScore <= 4 ? "Fair" : pwScore === 5 ? "Good" : "Strong";
+  const strengthColor =
+    pwScore <= 2
+      ? "bg-destructive"
+      : pwScore <= 4
+      ? "bg-yellow-500"
+      : pwScore === 5
+      ? "bg-blue-500"
+      : "bg-green-500";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +83,17 @@ const Auth = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (!isLogin && !pwValid) {
+      toast({
+        title: "Weak Password",
+        description:
+          "Please meet all password requirements: 8+ characters, uppercase, lowercase, number, special character, and avoid common passwords.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isLogin && formData.password.length < 6) {
       toast({
         title: "Weak Password",
         description: "Password must be at least 6 characters.",
