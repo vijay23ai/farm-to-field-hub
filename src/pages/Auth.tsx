@@ -240,6 +240,40 @@ const Auth = () => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {!isLogin && formData.password.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${strengthColor}`}
+                        style={{ width: `${(pwScore / 6) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground w-12 text-right">
+                      {strengthLabel}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {!isLogin && (
+                <ul className="text-xs space-y-1 pt-1">
+                  {[
+                    { ok: pwChecks.length, label: "Minimum 8 characters" },
+                    { ok: pwChecks.upper, label: "At least 1 uppercase letter" },
+                    { ok: pwChecks.lower, label: "At least 1 lowercase letter" },
+                    { ok: pwChecks.number, label: "At least 1 number" },
+                    { ok: pwChecks.special, label: "At least 1 special character" },
+                    { ok: pwChecks.notCommon, label: "Avoid common or weak passwords" },
+                  ].map((r) => (
+                    <li
+                      key={r.label}
+                      className={r.ok ? "text-green-500" : "text-muted-foreground"}
+                    >
+                      {r.ok ? "✓" : "○"} {r.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {!isLogin && (
@@ -253,6 +287,10 @@ const Auth = () => {
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
                 />
+                {formData.confirmPassword.length > 0 &&
+                  formData.confirmPassword !== formData.password && (
+                    <p className="text-xs text-destructive">Passwords do not match</p>
+                  )}
               </div>
             )}
 
