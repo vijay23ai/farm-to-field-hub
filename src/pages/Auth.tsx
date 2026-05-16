@@ -137,12 +137,12 @@ const Auth = () => {
         console.debug("Signup password diagnostics:", passwordDiagnostics);
         
         const { error } = await supabase.auth.signUp({
-          email: formData.email.trim(),
+          email: formData.email,
           password: formData.password,
           options: {
             emailRedirectTo: redirectUrl,
             data: {
-              full_name: formData.fullName.trim(),
+              full_name: formData.fullName,
             },
           },
         });
