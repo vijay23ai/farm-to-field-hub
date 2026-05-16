@@ -128,6 +128,13 @@ const Auth = () => {
         navigate("/");
       } else {
         const redirectUrl = `${window.location.origin}/`;
+        const passwordDiagnostics = {
+          length: formData.password.length,
+          meetsLocalRequirements: pwValid,
+          hasLeadingOrTrailingSpace: formData.password !== formData.password.trim(),
+          hasZeroWidthCharacters: /[\u200B-\u200D\uFEFF]/.test(formData.password),
+        };
+        console.debug("Signup password diagnostics:", passwordDiagnostics);
         
         const { error } = await supabase.auth.signUp({
           email: formData.email,
@@ -141,7 +148,14 @@ const Auth = () => {
         });
 
         if (error) {
-          console.error("Signup error:", error);
+          console.error("Signup error:", {
+            name: error.name,
+            message: error.message,
+            status: error.status,
+            code: error.code,
+            weakPasswordReasons: (error as { reasons?: string[] }).reasons,
+            passwordDiagnostics,
+          });
           toast({
             title: "Signup Failed",
             description: error.message || "We couldn't complete your signup. Please try again.",
