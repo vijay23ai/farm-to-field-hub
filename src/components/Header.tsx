@@ -45,11 +45,11 @@ const Header = () => {
       <div className="neon-border rounded-2xl px-4 md:px-6">
         <div className="relative z-10 flex items-center justify-between h-14">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 neon-border neon-border-thin rounded-xl pl-2 pr-3 py-1.5">
-            <div className="relative z-10 w-8 h-8 rounded-lg bg-background/70 flex items-center justify-center">
-              <Sprout className="w-5 h-5 text-primary" />
+          <Link to="/" className="flex items-center gap-2 shrink-0 pr-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 border border-accent/30 flex items-center justify-center">
+              <Sprout className="w-5 h-5 text-accent" />
             </div>
-            <span className="relative z-10 text-lg font-semibold tracking-tight gradient-text">
+            <span className="text-lg font-display font-bold tracking-tight gradient-text-gold whitespace-nowrap">
               AgriPath AI
             </span>
           </Link>
