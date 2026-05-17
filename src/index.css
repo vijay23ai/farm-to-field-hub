@@ -265,3 +265,13 @@
     border-radius: 8px;
   }
 }
+
+/* Back-compat aliases — map legacy class names onto Emerald Prestige */
+@layer components {
+  .neon-border { @apply gold-border; }
+  .neon-border-thin { @apply gold-border; }
+  .neon-input { @apply input-prestige; }
+  .neon-button { @apply btn-ghost-gold; }
+  .glass-card { @apply glass-panel; }
+  .hero-gradient { background: var(--gradient-hero); }
+}
