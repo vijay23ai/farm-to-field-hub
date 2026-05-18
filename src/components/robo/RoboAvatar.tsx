@@ -233,11 +233,11 @@ function FarmerRobotMesh({ speaking, listening, mouthOpen = 0 }: RoboProps) {
           </group>
 
           {/* Chrome ears with bolts */}
-          <mesh position={[-0.52, 0, 0]}>
-            <cylinderGeometry args={[0.07, 0.07, 0.08, 16]} rotation={[0, 0, Math.PI / 2]} />
+          <mesh position={[-0.52, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.07, 0.07, 0.08, 16]} />
             <meshStandardMaterial color={colors.chrome} metalness={0.8} roughness={0.2} />
           </mesh>
-          <mesh position={[0.52, 0, 0]}>
+          <mesh position={[0.52, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.07, 0.07, 0.08, 16]} />
             <meshStandardMaterial color={colors.chrome} metalness={0.8} roughness={0.2} />
           </mesh>
