@@ -11,6 +11,7 @@ interface VoiceState {
   transcript: string;
   error: string | null;
   isSupported: boolean;
+  mouthOpen: number;
 }
 
 const languageCodeMap: Record<string, string> = {
@@ -32,10 +33,40 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
     error: null,
     isSupported: typeof window !== "undefined" && 
       ("SpeechRecognition" in window || "webkitSpeechRecognition" in window),
+    mouthOpen: 0,
   });
 
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const mouthRafRef = useRef<number | null>(null);
+  const mouthTargetRef = useRef(0);
+  const mouthValRef = useRef(0);
+
+  const startMouthLoop = useCallback(() => {
+    if (mouthRafRef.current != null) return;
+    const tick = () => {
+      // ease toward target then decay so the mouth pulses per syllable
+      mouthValRef.current += (mouthTargetRef.current - mouthValRef.current) * 0.35;
+      mouthTargetRef.current *= 0.86;
+      setState((prev) =>
+        Math.abs(prev.mouthOpen - mouthValRef.current) < 0.02
+          ? prev
+          : { ...prev, mouthOpen: mouthValRef.current }
+      );
+      mouthRafRef.current = requestAnimationFrame(tick);
+    };
+    mouthRafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const stopMouthLoop = useCallback(() => {
+    if (mouthRafRef.current != null) {
+      cancelAnimationFrame(mouthRafRef.current);
+      mouthRafRef.current = null;
+    }
+    mouthTargetRef.current = 0;
+    mouthValRef.current = 0;
+    setState((prev) => (prev.mouthOpen === 0 ? prev : { ...prev, mouthOpen: 0 }));
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -127,25 +158,37 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
 
     utterance.onstart = () => {
       setState(prev => ({ ...prev, isSpeaking: true }));
+      mouthTargetRef.current = 0.9;
+      startMouthLoop();
     };
 
     utterance.onend = () => {
       setState(prev => ({ ...prev, isSpeaking: false }));
+      stopMouthLoop();
     };
 
     utterance.onerror = () => {
       setState(prev => ({ ...prev, isSpeaking: false }));
+      stopMouthLoop();
+    };
+
+    utterance.onboundary = (ev: SpeechSynthesisEvent) => {
+      // Pulse the mouth each word/syllable; vowel-heavy words open wider
+      const word = text.slice(ev.charIndex, ev.charIndex + (ev.charLength || 4));
+      const vowels = (word.match(/[aeiouAEIOU]/g) || []).length;
+      mouthTargetRef.current = Math.min(1, 0.55 + vowels * 0.18 + Math.random() * 0.15);
     };
 
     synthRef.current.speak(utterance);
-  }, [language]);
+  }, [language, startMouthLoop, stopMouthLoop]);
 
   const stopSpeaking = useCallback(() => {
     if (synthRef.current) {
       synthRef.current.cancel();
       setState(prev => ({ ...prev, isSpeaking: false }));
+      stopMouthLoop();
     }
-  }, []);
+  }, [stopMouthLoop]);
 
   const clearTranscript = useCallback(() => {
     setState(prev => ({ ...prev, transcript: "" }));

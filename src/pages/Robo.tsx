@@ -441,7 +441,7 @@ const Robo = () => {
             {/* 3D Robo */}
             <div className="lg:col-span-2">
               <div className="bg-gradient-to-br from-primary/10 via-card to-accent/10 rounded-3xl border border-border shadow-lg overflow-hidden h-[500px] lg:h-[600px] relative">
-                <RoboAvatar speaking={isSpeaking} listening={voice.isListening} />
+                <RoboAvatar speaking={isSpeaking} listening={voice.isListening} mouthOpen={voice.mouthOpen} />
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center">
                   <div className="bg-background/80 backdrop-blur-md px-4 py-2 rounded-full border border-border flex items-center gap-2 text-sm">
                     <Bot className="w-4 h-4 text-primary" />
